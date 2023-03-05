@@ -1,8 +1,11 @@
-# pytestの使い方
-## 必要な前提知識
-- pytestの実行方法
-- 
-
+# pytestの基本的な使い方
+## 内容
+1. fixtureのついて
+2. パラメータの与え方について
+3. pytestの組み込みマーカーについて
+4. mockについて  
+・monkeypatch  
+・pytest-mock  
 
 ## 0. 簡単におさらい
 - pytestの要件:  
@@ -372,7 +375,7 @@ sys.pathの先頭にpathを追加する
 作業ディレクトリを変更する  
 
 ### 使い方の例
-```python:./src/app/baz.py
+```python
 # テスト対象のクラス
 import os
 import platform
@@ -390,7 +393,7 @@ class TargetObj:
 
 ```
 
-```python:./src/test/test_baz.py
+```python
 # monkeypatchの使い方の例
 class TestTargetOjb:
     # アトリビュートの変更
@@ -439,5 +442,4 @@ class TestTargetOjb:
         target_obj = TargetObj(param="test_parm")
 
         assert target_obj.method2() == "BBB"
-
 ```
