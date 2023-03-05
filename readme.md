@@ -345,49 +345,99 @@ def test_add(param1, param2, expected_value, generate_params):
 ※ 組み込みマーカー以外にも、カスタムマーカー(自作できる)があるがここでは割愛
 
 ## 4. mockについて
-- 組み込みfixtureのmonkeypatchの使い方について  
-・アトリビュートを操作する
-```python
+### 組み込みfixtureのmonkeypatchの使い方について  
+・monkeypatchの主なメソッド  
+- setattr(target, name, value, raising=True)  
+属性を設定する  
+
+- delattr(target, name, raising=True)
+属性を削除する  
+
+- setitem(dic, name, value)  
+辞書のエントリを設定する  
+
+- delitem(dic, name, raising=True)  
+辞書のエントリを削除する  
+
+- setenv(name, value, prepend=True)  
+環境変数を設定する  
+
+- delenv(name, raising=True)  
+環境変数を削除する  
+
+- syspath_preprend(path)  
+sys.pathの先頭にpathを追加する
+
+- chdir(path)  
+作業ディレクトリを変更する  
+
+### 使い方の例
+```python:./src/app/baz.py
+# テスト対象のクラス
+import os
+import platform
+
 
 class TargetObj:
-    def __init__():
-        ...
-    def func_1():
-        return ""
+    def __init__(self, param) -> None:
+        self.param = param
 
-def test_some_func(monkeypatch):
-    ...
+    def method1(self) -> str:
+        return f"{self.param}, {platform.system()}"
+
+    def method2(self) -> str:
+        return os.getenv("TEST_ENV")
+
 ```
 
-・環境変数の操作  
-```python
-class TargetObj:
-    def __init__():
-        ...
-    def func_1():
-        return ""
+```python:./src/test/test_baz.py
+# monkeypatchの使い方の例
+class TestTargetOjb:
+    # アトリビュートの変更
+    def test_method1(self, monkeypatch):
+        # platform.systemの差し替え用に作成
+        def mock_platform_system():
+            return "Test OS"
 
-def test_some_func(monkeypatch):
-    ...
-```
+        # builtinのplatform.sysetmを自作したmock_platform_systemに差し替え
+        # ※ コンテキストマネージャを使わない方法だと、
+        #   この関数内の後続のplatform.systemの動作に影響するので注意
+        monkeypatch.setattr(platform, "system", mock_platform_system)
 
-・コンテキストマネージャ使ったmock
-```python
-class TargetObj:
-    def __init__():
-        ...
-    def func_1():
-        return ""
+        target_obj = TargetObj(param="test_parm")
+        # Test OSが出力される
+        print(platform.system())
 
-def test_some_func(monkeypatch):
-    ...
-```
+        assert target_obj.method1() == "test_parm, Test OS"
 
+    # mockの影響範囲を限定させたい場合(monkeypatch.context)
+    # pytest src/test/test_baz.py::TestTargetOjb::test_method3 -sv
+    def test_method1_2(self, monkeypatch):
+        # platform.systemの差し替え用に作成
+        def mock_platform_system():
+            return "Test OS"
 
-- pytest-mockについて
+        # with構文を使って、範囲を限定する
+        # builtinのplatform.sysetmを自作したmock_platform_systemに差し替え
+        with monkeypatch.context() as mock:
+            mock.setattr(platform, "system", mock_platform_system)
+            target_obj = TargetObj(param="test_parm")
+            result = target_obj.method1()
 
-```python
+            # context内では文字列"Test OS"を返す(mock_platform_systemの返り値)
+            print(platform.system())
 
-def test_some_func(mock):
-    
+        # contextを出ると、本来のplatform.system()の返り値になる
+        print(platform.system())
+
+        assert result == "test_parm, Test OS"
+
+    # 環境変数の変更
+    def test_method3(self, monkeypatch):
+        # 環境変数を操作する
+        monkeypatch.setenv("TEST_ENV", "BBB")
+        target_obj = TargetObj(param="test_parm")
+
+        assert target_obj.method2() == "BBB"
+
 ```
