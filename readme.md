@@ -4,8 +4,13 @@
 2. パラメータの与え方について
 3. pytestの組み込みマーカーについて
 4. mockについて  
-・monkeypatch  
-・pytest-mock  
+・monkeypatchの使い方  
+
+#### ※ これらのの実装の例をsrc配下に置いている
+```
+テスト対象: python_pytest/src/app  
+テスト:    python_pytest/src/test  
+```
 
 ## 0. 簡単におさらい
 - pytestの要件:  
